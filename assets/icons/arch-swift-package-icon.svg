@@ -16,30 +16,30 @@
     </linearGradient>
   </defs>
 
-  <!-- Фон типа файла -->
+  <!-- File type background -->
   <rect x="10" y="10" width="236" height="236" rx="54" fill="url(#bg)"/>
   <circle cx="204" cy="52" r="44" fill="#FFFFFF" opacity="0.08"/>
   <circle cx="44" cy="212" r="54" fill="#FFFFFF" opacity="0.05"/>
 
-  <!-- Коробка пакета -->
+  <!-- Package box -->
   <path d="M58 138l70-33 70 33-70 33z" fill="#F7FCFF"/>
   <path d="M58 138l70 33v50l-70-33z" fill="url(#front)"/>
   <path d="M198 138l-70 33v50l70-33z" fill="url(#side)"/>
   <path d="M128 171v50" stroke="#7FB6D8" stroke-width="2.5" opacity="0.85"/>
 
-  <!-- Лента -->
+  <!-- Ribbon -->
   <path d="M118 165l20 10v46l-20-10z" fill="#FFC857" opacity="0.95"/>
 
-  <!-- Печать с буквой A -->
+  <!-- Stamp with the letter A -->
   <circle cx="88" cy="186" r="24" fill="#0B537F"/>
   <circle cx="88" cy="186" r="20" fill="#FFFFFF"/>
   <path d="M80 195l8-18 8 18M83.5 188h9" fill="none" stroke="#0B537F" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Магическая звезда: пакет готов к установке -->
+  <!-- Magic star: the package is ready to install -->
   <path d="M196 76l4.4 11.6L212 92l-11.6 4.4L196 108l-4.4-11.6L180 92l11.6-4.4z" fill="#FFE08A"/>
   <circle cx="214" cy="116" r="4" fill="#FFFFFF" opacity="0.9"/>
   <circle cx="182" cy="58" r="3" fill="#FFFFFF" opacity="0.7"/>
 
-  <!-- Блик -->
+  <!-- Highlight -->
   <path d="M70 148l44 21" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
 </svg>

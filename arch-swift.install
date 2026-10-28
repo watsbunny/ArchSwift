@@ -1,9 +1,9 @@
-# Скриптлеты pacman для ArchSwift.
+# pacman hooks for ArchSwift.
 #
-# Pacman выполняет эти функции из корня системы (cwd = /), поэтому пути
-# намеренно указаны относительными, как принято в пакетах Arch Linux.
-# Все вызовы необязательных утилит защищены проверками: отсутствие утилиты
-# не должно прерывать транзакцию pacman.
+# Pacman runs these functions from the system root (cwd = /), so the paths are
+# intentionally relative, as is customary in Arch Linux packages.
+# Every call to an optional tool is guarded by a check: a missing tool must not
+# abort the pacman transaction.
 
 _update_mime_database() {
   if command -v update-mime-database >/dev/null 2>&1; then
@@ -31,9 +31,12 @@ post_install() {
   _update_icon_cache
 
   cat <<'EOF'
-ArchSwift установлен.
+ArchSwift is installed. / ArchSwift установлен.
 
+Packages (*.pkg.tar.zst) now open in the wizard on double-click.
 Теперь файлы *.pkg.tar.zst открываются мастером двойным щелчком.
+
+If the association has not applied to the current session yet, run:
 Если ассоциация ещё не применилась в текущем сеансе, выполните:
 
   xdg-mime default arch-swift.desktop application/x-arch-swift-package

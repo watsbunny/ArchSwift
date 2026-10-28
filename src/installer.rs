@@ -1,12 +1,12 @@
-//! Запуск установки через Polkit и `pacman` без блокировки интерфейса.
+//! Running the installation through Polkit and `pacman` without blocking the UI.
 //!
-//! Команда запускается напрямую, без `sh -c`, поэтому путь к пакету не может
-//! превратиться в shell-команду. `pkexec` показывает родной диалог KDE/GNOME,
-//! а `pacman -U --noconfirm` выполняет установку уже от имени root.
+//! The command is executed directly, without `sh -c`, so the package path can
+//! never turn into a shell command. `pkexec` shows the native KDE/GNOME dialog,
+//! and `pacman -U --noconfirm` performs the installation as root.
 //!
-//! Здесь намеренно используется `std::process`, а не `GSubprocess`: дочерний
-//! процесс и его потоки ввода-вывода должны свободно перемещаться в рабочий
-//! поток, не затрагивая GTK/GIO-объекты главного потока.
+//! `std::process` is used here deliberately instead of `GSubprocess`: the child
+//! process and its I/O streams must be free to move to a worker thread without
+//! touching GTK/GIO objects of the main thread.
 
 use std::io::{BufRead, BufReader, Read};
 use std::path::Path;
@@ -18,31 +18,31 @@ use std::thread;
 use crate::i18n;
 use crate::WorkerMsg;
 
-/// Итог работы дочернего процесса.
+/// Result of the child process.
 #[derive(Debug, Clone)]
 pub struct InstallOutcome {
     pub success: bool,
     pub exit_code: Option<i32>,
-    /// Готовая к показу причина ошибки (если установка не удалась).
+    /// A ready-to-show error reason (when the installation failed).
     pub error: Option<String>,
 }
 
-/// Запускает `pkexec pacman -U --noconfirm <path>`.
+/// Runs `pkexec pacman -U --noconfirm <path>`.
 ///
-/// Функция возвращает управление сразу после создания процесса. Чтение вывода
-/// и ожидание завершения происходят в отдельном потоке, поэтому GTK-цикл
-/// остаётся отзывчивым, а прогресс можно анимировать.
+/// The function returns right after spawning the process. Output reading and
+/// waiting for completion happen in a separate thread, so the GTK loop stays
+/// responsive and the progress can be animated.
 pub fn start(path: &Path, sender: Sender<WorkerMsg>) -> Result<(), String> {
     let mut child = Command::new("pkexec")
-        // Не позволяем pkexec уходить в устаревший текстовый агент: на рабочем
-        // столе должен использоваться системный графический агент Polkit.
+        // Do not let pkexec fall back to the legacy text agent: on a desktop the
+        // system graphical Polkit agent must be used.
         .arg("--disable-internal-agent")
         .arg("pacman")
         .arg("-U")
         .arg("--noconfirm")
         .arg(path)
-        // Рабочий каталог root-процесса не должен зависеть от каталога, из
-        // которого пользователь запустил мастер (например, с флешки).
+        // The root process working directory must not depend on the directory the user
+        // started the wizard from (for example, a USB stick).
         .current_dir("/")
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
@@ -61,8 +61,8 @@ pub fn start(path: &Path, sender: Sender<WorkerMsg>) -> Result<(), String> {
     }) {
         Ok(_) => Ok(()),
         Err(error) => {
-            // Поток не создан — завершаем уже запущенный pkexec, чтобы установка
-            // не продолжилась без контроля со стороны мастера.
+            // The thread was not created — terminate the already started pkexec so the
+            // installation does not continue without the wizard being in control.
             if let Ok(mut child) = shared_child.lock() {
                 let _ = child.kill();
                 let _ = child.wait();
@@ -75,7 +75,7 @@ pub fn start(path: &Path, sender: Sender<WorkerMsg>) -> Result<(), String> {
     }
 }
 
-/// Читает stdout и stderr, дожидается завершения и отправляет итог в GTK-поток.
+/// Reads stdout and stderr, waits for completion and sends the result to the GTK thread.
 fn run_process(
     child: Arc<Mutex<Child>>,
     stdout: Option<ChildStdout>,
@@ -147,8 +147,8 @@ fn run_process(
     }
 }
 
-/// Построчно пересылает вывод процесса, корректно обрабатывая не-UTF-8 байты.
-/// Возвращает локализованную ошибку чтения, если поток оборвался.
+/// Forwards the process output line by line, handling non-UTF-8 bytes correctly.
+/// Returns a localized read error if the stream broke.
 fn forward_output<R: Read>(stream: R, sender: Sender<WorkerMsg>) -> Option<String> {
     let mut reader = BufReader::new(stream);
     let mut buffer = Vec::new();
@@ -161,7 +161,7 @@ fn forward_output<R: Read>(stream: R, sender: Sender<WorkerMsg>) -> Option<Strin
                 let text = String::from_utf8_lossy(&buffer);
                 let line = text.trim_end_matches(['\r', '\n']).to_string();
                 if sender.send(WorkerMsg::Log(line)).is_err() {
-                    // Окно уже закрыто — дальше передавать вывод некому.
+                    // The window is already closed — there is nobody left to send output to.
                     return None;
                 }
             }
@@ -174,7 +174,7 @@ fn forward_output<R: Read>(stream: R, sender: Sender<WorkerMsg>) -> Option<Strin
     }
 }
 
-/// Переводит коды выхода `pkexec`/`pacman` в понятные пользователю сообщения.
+/// Turns `pkexec`/`pacman` exit codes into messages users understand.
 fn failure_message(exit_code: Option<i32>) -> Option<String> {
     let message = match exit_code {
         Some(126) => i18n::tr("error.install.auth_cancelled", &[]),

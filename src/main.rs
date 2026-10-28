@@ -1,15 +1,14 @@
-//! ArchSwift — графический мастер установки локальных пакетов Arch Linux.
+//! ArchSwift — a graphical wizard for installing local Arch Linux packages.
 //!
-//! Программа рассчитана на запуск двойным щелчком по файлу `*.pkg.tar.zst`.
-//! Архитектура специально разделена на три слоя:
-//!   1. `metadata`  — безопасное чтение `.PKGINFO` из сжатого tar-архива;
-//!   2. `installer` — запуск `pkexec pacman -U` в отдельном потоке без блокировки GTK;
-//!   3. `ui`        — трёхшаговый мастер на GTK4 с обменом сообщениями через канал.
+//! The program is meant to be started by double-clicking a `*.pkg.tar.zst` file.
+//! The architecture is deliberately split into three layers:
+//!   1. `metadata`  — safe reading of `.PKGINFO` from a compressed tar archive;
+//!   2. `installer` — runs `pkexec pacman -U` in a separate thread, without blocking GTK;
+//!   3. `ui`        — a three-step GTK4 wizard exchanging messages over a channel.
 //!
-//! Все обращения к файловой системе и внешним процессам возвращают понятные
-//! локализованные ошибки. Пользовательские данные никогда не подставляются
-//! в shell: `pkexec` запускается напрямую через `std::process::Command`
-//! с массивом аргументов.
+//! Every file-system and external-process operation returns a clear localized
+//! error. User data is never passed to a shell: `pkexec` is invoked directly
+//! through `std::process::Command` with an argument array.
 
 use std::path::PathBuf;
 
@@ -17,8 +16,8 @@ use gtk::glib;
 use gtk::prelude::*;
 use gtk::{gio, Application};
 
-/// Единая точка журналирования. Префикс облегчает поиск в journalctl/stdout.
-/// Макрос объявлен до модулей, чтобы `log_info!` был виден во всех дочерних модулях.
+/// Single logging entry point. The prefix makes searching journalctl/stdout easier.
+/// The macro is declared before the modules so `log_info!` is visible in every child module.
 macro_rules! log_info {
     ($($arg:tt)*) => {
         eprintln!("[{}] {}", crate::APP_NAME, format_args!($($arg)*))
@@ -30,41 +29,41 @@ mod installer;
 mod metadata;
 mod ui;
 
-/// Идентификатор приложения в терминах freedesktop.org / Wayland / D-Bus.
+/// Application identifier in freedesktop.org / Wayland / D-Bus terms.
 pub const APP_ID: &str = "org.openarch.swift";
-/// Человекочитаемое имя, используемое в заголовках окон и журналах.
+/// Human-readable name used in window titles and logs.
 pub const APP_NAME: &str = "ArchSwift";
-/// Имя иконки самого приложения из темы hicolor.
+/// Icon name of the application itself from the hicolor theme.
 pub const ICON_APP: &str = "arch-swift-installer";
 
-/// Сообщения, которые фоновые потоки передают в GTK-поток.
+/// Messages that background threads send to the GTK thread.
 ///
-/// Канал намеренно не содержит GTK-типов: это позволяет работать с ним
-/// из обычных `std::thread` и не нарушать правила потокобезопасности GTK.
+/// The channel intentionally carries no GTK types: that keeps it usable from
+/// plain `std::thread`s without breaking GTK's thread-safety rules.
 enum WorkerMsg {
-    /// Результат разбора метаданных пакета. Box уменьшает размер сообщения канала.
+    /// Parsed package metadata. The box keeps channel messages small.
     Metadata(Result<Box<metadata::PackageInfo>, String>),
-    /// Одна строка вывода `pkexec`/`pacman`.
+    /// A single line of `pkexec`/`pacman` output.
     Log(String),
-    /// Итог установки.
+    /// Installation outcome.
     Finished(installer::InstallOutcome),
 }
 
 fn main() -> glib::ExitCode {
-    // Иконки упакованы в GResource на этапе сборки, поэтому мастер выглядит
-    // одинаково и до установки пакета, и после неё.
+    // Icons are packed into a GResource at build time, so the wizard looks the
+    // same both before the package is installed and after it.
     gio::resources_register_include!("arch-swift.gresource")
-        .expect("не удалось зарегистрировать встроенные ресурсы");
+        .expect("failed to register the bundled resources");
 
-    // Аргумент `%f` из .desktop-файла: путь к пакету, открытому двойным щелчком.
-    // Если программа запущена вручную без аргумента, мастер предложит выбрать файл.
+    // The `%f` argument from the .desktop file: the path of the double-clicked package.
+    // When started manually without arguments, the wizard offers a file chooser.
     let initial_path = std::env::args_os()
         .nth(1)
         .map(PathBuf::from)
         .filter(|path| !path.as_os_str().is_empty());
 
-    // NON_UNIQUE позволяет открыть несколько мастеров одновременно — по одному
-    // на каждый пакет. Это ближе к привычному поведению установщиков Windows.
+    // NON_UNIQUE allows several wizards to run at once — one per package.
+    // This is closer to the usual behaviour of Windows installers.
     let app = Application::builder()
         .application_id(APP_ID)
         .flags(gio::ApplicationFlags::NON_UNIQUE)
@@ -80,10 +79,10 @@ fn main() -> glib::ExitCode {
         ui::build(application, initial_path.clone());
     });
 
-    // GApplication не должен разбирать путь к пакету как файловый аргумент:
-    // без флага HANDLES_OPEN это приводит к критическому сообщению
-    // «This application can not open files» и завершению с ошибкой.
-    // Путь уже прочитан вручную выше, поэтому GTK получает только имя программы.
+    // GApplication must not treat the package path as a file argument: without the
+    // HANDLES_OPEN flag that produces a critical "This application can not open
+    // files" message and an error exit. The path has already been read manually
+    // above, so GTK only receives the program name.
     let program = std::env::args()
         .next()
         .unwrap_or_else(|| APP_NAME.to_string());

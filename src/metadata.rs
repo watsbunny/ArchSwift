@@ -1,9 +1,9 @@
-//! Разбор локальных пакетов Arch Linux без их установки.
+//! Parsing local Arch Linux packages without installing them.
 //!
-//! Пакет Arch Linux — это обычный tar-архив, сжатый zstd (современный формат),
-//! xz, gzip либо несжатый. Сразу после заголовков makepkg кладёт служебный файл
-//! `.PKGINFO`, поэтому для отображения сведений не нужно распаковывать весь пакет:
-//! чтение прекращается, как только начинается область полезной нагрузки.
+//! An Arch Linux package is a plain tar archive compressed with zstd (the modern
+//! format), xz or gzip, or left uncompressed. makepkg puts the service file
+//! `.PKGINFO` right after the headers, so showing the details does not require
+//! unpacking the whole package: reading stops as soon as the payload begins.
 
 use std::fs::File;
 use std::io::{BufReader, Read};
@@ -13,14 +13,14 @@ use gtk::glib;
 
 use crate::i18n;
 
-/// Метаданные, необходимые мастеру для первого экрана.
+/// Metadata the wizard needs for the first screen.
 #[derive(Debug, Clone, Default)]
 pub struct PackageInfo {
-    /// Канонизированный абсолютный путь к файлу пакета.
+    /// Canonical absolute path to the package file.
     pub path: PathBuf,
-    /// Размер сжатого файла на диске.
+    /// Size of the compressed file on disk.
     pub file_size: u64,
-    /// Найден ли рядом файл подписи `<package>.sig`.
+    /// Whether a `<package>.sig` signature file was found next to it.
     pub signed: bool,
     pub pkgname: String,
     pub pkgver: String,
@@ -28,9 +28,9 @@ pub struct PackageInfo {
     pub url: String,
     pub packager: String,
     pub arch: String,
-    /// Unix-время сборки пакета.
+    /// Unix build time of the package.
     pub builddate: Option<i64>,
-    /// Размер после установки, как его указывает makepkg в `.PKGINFO`.
+    /// Installed size as reported by makepkg in `.PKGINFO`.
     pub installed_size: Option<u64>,
     pub licenses: Vec<String>,
     pub depends: Vec<String>,
@@ -39,19 +39,19 @@ pub struct PackageInfo {
     pub conflicts: Vec<String>,
     pub replaces: Vec<String>,
     pub groups: Vec<String>,
-    /// Наличие `.INSTALL` означает, что пакет выполняет собственные скрипты.
+    /// The presence of `.INSTALL` means the package runs its own scripts.
     pub has_install_script: bool,
 }
 
 impl PackageInfo {
-    /// Короткое имя вида `pkgname pkgver` для заголовков и журналов.
+    /// Short `pkgname pkgver` form for titles and logs.
     pub fn summary(&self) -> String {
         format!("{} {}", self.pkgname, self.pkgver)
             .trim()
             .to_string()
     }
 
-    /// Дата сборки в нейтральном формате `ГГГГ-ММ-ДД ЧЧ:ММ`.
+    /// Build date in the neutral `YYYY-MM-DD HH:MM` format.
     pub fn build_date(&self) -> Option<String> {
         let timestamp = self.builddate?;
 
@@ -62,7 +62,7 @@ impl PackageInfo {
     }
 }
 
-/// Читает и проверяет пакет. Функция не требует root-прав и не изменяет систему.
+/// Reads and validates a package. Needs no root rights and does not modify the system.
 pub fn load(path: &Path) -> Result<PackageInfo, String> {
     let canonical = path.canonicalize().map_err(|error| {
         localized_error(
@@ -143,8 +143,8 @@ pub fn load(path: &Path) -> Result<PackageInfo, String> {
                 break;
             }
         } else if !entry_name.starts_with('.') {
-            // Стандартный makepkg кладёт все служебные файлы до полезной нагрузки.
-            // Дальше читать архив нет смысла — это только замедлило бы мастер.
+            // Standard makepkg places all service files before the payload.
+            // Reading any further is pointless — it would only slow the wizard down.
             payload_started = true;
 
             if pkginfo_text.is_some() {
@@ -173,12 +173,12 @@ pub fn load(path: &Path) -> Result<PackageInfo, String> {
     Ok(info)
 }
 
-/// Собирает локализованное сообщение об ошибке из шаблона и аргументов.
+/// Builds a localized error message from a template and its arguments.
 fn localized_error(key: &str, args: &[(&str, &str)]) -> String {
     i18n::tr(key, args)
 }
 
-/// Открывает поток чтения с учётом фактического расширения пакета.
+/// Opens a reader based on the actual package extension.
 fn open_reader(path: &Path) -> Result<Box<dyn Read>, String> {
     let file = File::open(path).map_err(|error| {
         localized_error(
@@ -219,7 +219,7 @@ fn open_reader(path: &Path) -> Result<Box<dyn Read>, String> {
     }
 }
 
-/// Приводит путь элемента tar к виду без ведущего `./`.
+/// Normalizes a tar entry path by dropping the leading `./`.
 fn normalize_entry_path(path: &Path) -> String {
     path.to_string_lossy()
         .replace('\\', "/")
@@ -227,14 +227,14 @@ fn normalize_entry_path(path: &Path) -> String {
         .to_string()
 }
 
-/// Проверяет наличие отдельного файла подписи, не изменяя исходный путь.
+/// Checks for a separate signature file without modifying the original path.
 fn signature_exists(path: &Path) -> bool {
     let mut signature = path.as_os_str().to_os_string();
     signature.push(".sig");
     PathBuf::from(signature).is_file()
 }
 
-/// Разбирает формат `.PKGINFO` (`ключ = значение`, повторяющиеся ключи).
+/// Parses the `.PKGINFO` format (`key = value`, repeated keys).
 fn parse_pkginfo(info: &mut PackageInfo, text: &str) -> Result<(), String> {
     for raw_line in text.lines() {
         let line = raw_line.trim();
@@ -267,7 +267,7 @@ fn parse_pkginfo(info: &mut PackageInfo, text: &str) -> Result<(), String> {
             "conflicts" => info.conflicts.push(value.to_string()),
             "replaces" => info.replaces.push(value.to_string()),
             "group" => info.groups.push(value.to_string()),
-            // Остальные поля (.BUILDINFO-совместимые, xdata и т.п.) мастеру не нужны.
+            // The remaining fields (.BUILDINFO-compatible, xdata, etc.) are not needed by the wizard.
             _ => {}
         }
     }
@@ -282,10 +282,10 @@ fn parse_pkginfo(info: &mut PackageInfo, text: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// Форматирует размер в двоичных единицах.
+/// Formats a size in binary units.
 ///
-/// Обозначения B/KiB/MiB не переводятся: это общепринятые технические
-/// сокращения, одинаково понятные во всех трёх локалях.
+/// The B/KiB/MiB designations are not translated: they are conventional
+/// technical abbreviations understood in all three locales.
 pub fn human_size(bytes: u64) -> String {
     const UNITS: [&str; 5] = ["B", "KiB", "MiB", "GiB", "TiB"];
     let mut value = bytes as f64;
@@ -328,7 +328,7 @@ group = demo
     #[test]
     fn parses_repeated_and_single_fields() {
         let mut info = PackageInfo::default();
-        parse_pkginfo(&mut info, SAMPLE).expect("образец должен разбираться");
+        parse_pkginfo(&mut info, SAMPLE).expect("the sample must parse");
 
         assert_eq!(info.pkgname, "demo-package");
         assert_eq!(info.pkgver, "1.2.3-1");

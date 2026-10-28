@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Регистрация пакетов Arch Linux как отдельного типа файлов.
-  Установка: /usr/share/mime/packages/arch-swift.xml
-  После установки необходимо выполнить update-mime-database.
+  Registers Arch Linux packages as a separate file type.
+  Installed to: /usr/share/mime/packages/arch-swift.xml
+  Run update-mime-database after installation.
 -->
 <mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
   <mime-type type="application/x-arch-swift-package">
@@ -10,20 +10,20 @@
     <comment xml:lang="de">Arch-Linux-Paket</comment>
     <comment xml:lang="ru">Пакет Arch Linux</comment>
 
-    <!-- Иконка из темы hicolor: assets/icons/arch-swift-package-icon.svg -->
+    <!-- Icon from the hicolor theme: assets/icons/arch-swift-package-icon.svg -->
     <icon name="arch-swift-package-icon"/>
     <generic-icon name="arch-swift-package-icon"/>
 
     <!--
-      Точные glob-шаблоны с высоким весом должны выигрывать у общего
-      application/x-compressed-tar, чтобы файл не открывался архиватором.
+      Precise glob patterns with a high weight must win over the generic
+      application/x-compressed-tar, so the file does not open in an archiver.
     -->
     <glob pattern="*.pkg.tar.zst" weight="90"/>
     <glob pattern="*.pkg.tar.xz" weight="90"/>
     <glob pattern="*.pkg.tar.gz" weight="90"/>
     <glob pattern="*.pkg.tar" weight="90"/>
 
-    <!-- Сохраняем совместимость с архиваторами и файловыми менеджерами. -->
+    <!-- Keep compatibility with archivers and file managers. -->
     <sub-class-of type="application/x-compressed-tar"/>
     <alias type="application/x-arch-package"/>
   </mime-type>

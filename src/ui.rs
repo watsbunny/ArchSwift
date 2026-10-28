@@ -1,8 +1,8 @@
-//! GTK4-интерфейс трёхшагового мастера.
+//! GTK4 interface of the three-step wizard.
 //!
-//! Потокобезопасность: все фоновые операции общаются с интерфейсом только через
-//! `std::sync::mpsc`. Главный поток раз в 80 мс забирает сообщения и обновляет
-//! виджеты. Это проще и надёжнее, чем передавать GTK-объекты между потоками.
+//! Thread safety: all background operations talk to the UI only through
+//! `std::sync::mpsc`. Every 80 ms the main thread drains messages and updates
+//! widgets. That is simpler and safer than passing GTK objects between threads.
 
 use std::cell::RefCell;
 use std::collections::VecDeque;
@@ -24,7 +24,7 @@ use crate::installer::{self, InstallOutcome};
 use crate::metadata::{self, PackageInfo};
 use crate::{i18n, WorkerMsg, APP_NAME, ICON_APP};
 
-/// Этапы жизненного цикла окна. Управляют подписями и доступностью кнопок.
+/// Lifecycle phases of the window. They drive button labels and sensitivity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Phase {
     Idle,
@@ -36,14 +36,14 @@ enum Phase {
     LoadError,
 }
 
-/// Изменяемое состояние, не являющееся виджетом.
+/// Mutable state that is not a widget.
 struct State {
     sender: Sender<WorkerMsg>,
     receiver: Receiver<WorkerMsg>,
     path: Option<PathBuf>,
     package: Option<PackageInfo>,
     phase: Phase,
-    /// Последние строки журнала — используются в сообщении об ошибке.
+    /// Last journal lines — used in the error message.
     last_lines: VecDeque<String>,
 }
 
@@ -61,7 +61,7 @@ impl State {
     }
 }
 
-/// Все виджеты, к которым обращаются обработчики и фоновые сообщения.
+/// All widgets touched by handlers and background messages.
 #[derive(Clone)]
 struct Wizard {
     window: ApplicationWindow,
@@ -91,7 +91,7 @@ struct Wizard {
     finish_log: Expander,
 }
 
-/// Подписи полей метаданных. Отдельная структура упрощает очистку при загрузке.
+/// Metadata field labels. A separate struct makes resetting on load easier.
 #[derive(Clone)]
 struct MetaFields {
     name: Label,
@@ -167,12 +167,12 @@ impl MetaFields {
     }
 }
 
-/// Создаёт окно мастера и подключает все обработчики.
+/// Creates the wizard window and connects every handler.
 pub fn build(application: &Application, initial_path: Option<PathBuf>) {
     register_bundled_icons();
     install_css();
-    // Иконка окна берётся из установленной темы hicolor. Если пакет ещё не
-    // установлен, используется та же иконка из встроенного GResource.
+    // The window icon comes from the installed hicolor theme. If the package is
+    // not installed yet, the same icon is taken from the bundled GResource.
     Window::set_default_icon_name(ICON_APP);
 
     let window = ApplicationWindow::builder()
@@ -267,8 +267,8 @@ pub fn build(application: &Application, initial_path: Option<PathBuf>) {
     if let Some(path) = initial_path {
         load_package(&wizard, &state, path);
     } else {
-        // Диалог показываем после первичной отрисовки окна, чтобы он корректно
-        // позиционировался относительно родителя в KDE и GNOME.
+        // Show the dialog only after the window has been drawn once, so that KDE and
+        // GNOME position it correctly relative to its parent.
         let wizard_for_dialog = wizard.clone();
         let state_for_dialog = state.clone();
         glib::idle_add_local_once(move || {
@@ -277,7 +277,7 @@ pub fn build(application: &Application, initial_path: Option<PathBuf>) {
     }
 }
 
-/// Шапка окна с названием и подзаголовком.
+/// Window header with the title and subtitle.
 fn build_header_bar() -> HeaderBar {
     let header = HeaderBar::new();
 
@@ -296,7 +296,7 @@ fn build_header_bar() -> HeaderBar {
     header
 }
 
-/// Шаг 1: приветствие и сведения о пакете.
+/// Step 1: welcome screen and package details.
 fn build_welcome_page() -> (ScrolledWindow, MetaFields, Spinner, Label, Button) {
     let content = GtkBox::new(Orientation::Vertical, 18);
     content.set_margin_top(26);
@@ -432,7 +432,7 @@ fn build_welcome_page() -> (ScrolledWindow, MetaFields, Spinner, Label, Button) 
     (scroll, fields, meta_spinner, meta_status, choose)
 }
 
-/// Шаг 2: прогресс установки и журнал pacman.
+/// Step 2: installation progress and the pacman journal.
 #[allow(clippy::type_complexity)]
 fn build_progress_page(
     log_buffer: &TextBuffer,
@@ -541,7 +541,7 @@ fn build_progress_page(
     )
 }
 
-/// Шаг 3: успех или ошибка.
+/// Step 3: success or failure.
 #[allow(clippy::type_complexity)]
 fn build_finish_page(log_buffer: &TextBuffer) -> (GtkBox, Image, Label, Label, Label, Expander) {
     let outer = GtkBox::new(Orientation::Vertical, 0);
@@ -612,7 +612,7 @@ fn build_finish_page(log_buffer: &TextBuffer) -> (GtkBox, Image, Label, Label, L
     (outer, icon, title, body, detail, finish_log)
 }
 
-/// Подключает кнопки и защиту от закрытия окна во время установки.
+/// Connects the buttons and prevents closing the window during installation.
 fn connect_signals(wizard: &Rc<Wizard>, state: &Rc<RefCell<State>>) {
     {
         let state = state.clone();
@@ -696,7 +696,7 @@ fn connect_signals(wizard: &Rc<Wizard>, state: &Rc<RefCell<State>>) {
     }
 }
 
-/// Периодически забирает сообщения фоновых потоков в GTK-потоке.
+/// Periodically drains messages from background threads on the GTK thread.
 fn start_message_polling(wizard: &Rc<Wizard>, state: &Rc<RefCell<State>>) {
     let wizard = wizard.clone();
     let state = state.clone();
@@ -722,7 +722,7 @@ fn start_message_polling(wizard: &Rc<Wizard>, state: &Rc<RefCell<State>>) {
     });
 }
 
-/// Анимирует неопределённый прогресс, пока виден второй шаг.
+/// Animates the indeterminate progress while the second step is visible.
 fn start_progress_animation(wizard: &Rc<Wizard>) {
     let progress = wizard.progress.clone();
 
@@ -734,7 +734,7 @@ fn start_progress_animation(wizard: &Rc<Wizard>) {
     });
 }
 
-/// Обрабатывает одно сообщение из фонового потока.
+/// Handles a single message from a background thread.
 fn handle_worker_message(wizard: &Rc<Wizard>, state: &Rc<RefCell<State>>, message: WorkerMsg) {
     match message {
         WorkerMsg::Metadata(Ok(package)) => {
@@ -814,7 +814,7 @@ fn handle_worker_message(wizard: &Rc<Wizard>, state: &Rc<RefCell<State>>, messag
     }
 }
 
-/// Запускает чтение метаданных в отдельном потоке.
+/// Starts reading metadata in a separate thread.
 fn load_package(wizard: &Rc<Wizard>, state: &Rc<RefCell<State>>, path: PathBuf) {
     {
         let mut current = state.borrow_mut();
@@ -836,8 +836,8 @@ fn load_package(wizard: &Rc<Wizard>, state: &Rc<RefCell<State>>, path: PathBuf) 
     wizard.meta_status.set_text(&t("welcome.reading"));
     wizard.window.set_title(Some(APP_NAME));
 
-    // Сбрасываем следы предыдущей установки, чтобы «Повторить» не показывал
-    // журнал другого пакета.
+    // Clear the traces of a previous installation so that "Retry" does not show
+    // the journal of another package.
     wizard.log_buffer.set_text("");
     wizard.log_expander.set_expanded(false);
     wizard.finish_log.set_expanded(false);
@@ -875,7 +875,7 @@ fn load_package(wizard: &Rc<Wizard>, state: &Rc<RefCell<State>>, path: PathBuf) 
     }
 }
 
-/// Начинает установку выбранного пакета.
+/// Starts installing the selected package.
 fn start_install(wizard: &Rc<Wizard>, state: &Rc<RefCell<State>>) {
     let (path, package) = {
         let mut current = state.borrow_mut();
@@ -934,7 +934,7 @@ fn start_install(wizard: &Rc<Wizard>, state: &Rc<RefCell<State>>) {
     }
 }
 
-/// Показывает итоговый экран и меняет назначение кнопок.
+/// Shows the final screen and changes the purpose of the buttons.
 fn finish_install(wizard: &Rc<Wizard>, state: &Rc<RefCell<State>>, outcome: InstallOutcome) {
     let package = state.borrow().package.clone();
     let last_lines: Vec<String> = state.borrow().last_lines.iter().cloned().collect();
@@ -1010,7 +1010,7 @@ fn finish_install(wizard: &Rc<Wizard>, state: &Rc<RefCell<State>>, outcome: Inst
     refresh_buttons(wizard, state.borrow().phase);
 }
 
-/// Применяет цветовую схему к иконке результата.
+/// Applies the colour scheme to the result icon.
 fn set_finish_style(wizard: &Wizard, success: bool) {
     wizard.finish_icon.remove_css_class("success-icon");
     wizard.finish_icon.remove_css_class("error-icon");
@@ -1021,7 +1021,7 @@ fn set_finish_style(wizard: &Wizard, success: bool) {
     });
 }
 
-/// Открывает нативный диалог выбора пакета.
+/// Opens the native package chooser dialog.
 fn choose_package(wizard: &Rc<Wizard>, state: &Rc<RefCell<State>>) {
     if matches!(state.borrow().phase, Phase::Installing | Phase::Loading) {
         return;
@@ -1062,7 +1062,7 @@ fn choose_package(wizard: &Rc<Wizard>, state: &Rc<RefCell<State>>) {
                 }
             },
             Err(error) => {
-                // Закрытие диалога пользователем — штатная ситуация.
+                // The user closing the dialog is a normal situation.
                 if error.matches(gtk::DialogError::Dismissed) {
                     log_info!("Package selection dialog was dismissed.");
                 } else {
@@ -1078,7 +1078,7 @@ fn choose_package(wizard: &Rc<Wizard>, state: &Rc<RefCell<State>>) {
     );
 }
 
-/// Заполняет карточку метаданных.
+/// Fills the metadata card.
 fn fill_metadata(wizard: &Wizard, package: &PackageInfo) {
     let dash = t("common.dash");
     let none = t("common.none");
@@ -1178,7 +1178,7 @@ fn fill_metadata(wizard: &Wizard, package: &PackageInfo) {
         .set_text(&package.path.display().to_string());
 }
 
-/// Соединяет повторяющиеся значения переводами строк; пустой список — заглушка.
+/// Joins repeated values with line breaks; an empty list becomes a placeholder.
 fn join_or_none(items: &[String], empty: &str) -> String {
     if items.is_empty() {
         empty.to_string()
@@ -1187,7 +1187,7 @@ fn join_or_none(items: &[String], empty: &str) -> String {
     }
 }
 
-/// Добавляет строку «ключ — значение» в сетку.
+/// Adds a "key — value" row to the grid.
 fn add_meta_row(grid: &Grid, row: i32, title: &str, value: &Label) {
     let key = Label::new(Some(title));
     key.set_xalign(0.0);
@@ -1199,7 +1199,7 @@ fn add_meta_row(grid: &Grid, row: i32, title: &str, value: &Label) {
     grid.attach(value, 1, row, 1, 1);
 }
 
-/// Создаёт подпись значения с переносом и возможностью выделения.
+/// Creates a value label that wraps and can be selected.
 fn value_label(monospace: bool) -> Label {
     let label = Label::new(Some("—"));
     label.set_xalign(0.0);
@@ -1217,7 +1217,7 @@ fn value_label(monospace: bool) -> Label {
     label
 }
 
-/// Состояние «файл ещё не выбран».
+/// The "no file selected yet" state.
 fn set_idle_metadata_state(wizard: &Wizard) {
     wizard.meta_spinner.stop();
     wizard.meta_spinner.set_visible(false);
@@ -1226,7 +1226,7 @@ fn set_idle_metadata_state(wizard: &Wizard) {
     wizard.meta_status.set_text(&t("welcome.not_selected"));
 }
 
-/// Обновляет подписи и доступность кнопок под текущий этап.
+/// Updates labels and button sensitivity for the current phase.
 fn refresh_buttons(wizard: &Wizard, phase: Phase) {
     wizard.back.set_visible(matches!(phase, Phase::Failed));
     wizard.back.set_sensitive(matches!(phase, Phase::Failed));
@@ -1258,7 +1258,7 @@ fn refresh_buttons(wizard: &Wizard, phase: Phase) {
     ));
 }
 
-/// Добавляет строку в буфер журнала и прокручивает его вниз.
+/// Appends a line to the journal buffer and scrolls it to the bottom.
 fn append_log(wizard: &Wizard, line: &str) {
     let mut end = wizard.log_buffer.end_iter();
     if wizard.log_buffer.char_count() > 0 {
@@ -1272,10 +1272,10 @@ fn append_log(wizard: &Wizard, line: &str) {
         .scroll_to_iter(&mut end, 0.0, false, 0.0, 1.0);
 }
 
-/// Обновляет верхнюю подпись прогресса по ключевым сообщениям pacman.
+/// Updates the progress caption from key pacman messages.
 ///
-/// Pacman локализуется вместе с системой, поэтому проверяются английские
-/// и русские варианты фраз. Если совпадения нет, статус просто не меняется.
+/// Pacman is localized together with the system, so both English and Russian
+/// phrases are checked. If nothing matches, the status is left unchanged.
 fn update_install_status(wizard: &Wizard, line: &str) {
     let lower = line.to_lowercase();
 
@@ -1315,17 +1315,17 @@ fn update_install_status(wizard: &Wizard, line: &str) {
     wizard.progress.set_text(Some(&status));
 }
 
-/// Подключает встроенные SVG-иконки к теме hicolor текущего дисплея.
+/// Registers the bundled SVG icons in the hicolor theme of the current display.
 ///
-/// Ресурсы зарегистрированы в `main.rs`; здесь достаточно указать GTK, где
-/// искать каталог `scalable/apps/<name>.svg`.
+/// The resources are registered in `main.rs`; here it is enough to tell GTK
+/// where to look for the `scalable/apps/<name>.svg` directory.
 fn register_bundled_icons() {
     if let Some(display) = gtk::gdk::Display::default() {
         gtk::IconTheme::for_display(&display).add_resource_path("/org/openarch/swift/icons");
     }
 }
 
-/// Загружает CSS один раз на дисплей.
+/// Loads the CSS once per display.
 fn install_css() {
     let provider = gtk::CssProvider::new();
     provider.load_from_data(CSS);
@@ -1339,7 +1339,7 @@ fn install_css() {
     }
 }
 
-/// Небольшая тема, не зависящая от конкретной цветовой схемы KDE/GNOME.
+/// Small theme that does not depend on a specific KDE/GNOME colour scheme.
 const CSS: &str = r#"
 headerbar .title {
     font-weight: 700;
@@ -1417,7 +1417,7 @@ headerbar .subtitle {
 }
 "#;
 
-/// Короткий помощник для строк без подстановок.
+/// Short helper for strings without placeholders.
 fn t(key: &str) -> String {
     i18n::tr(key, &[])
 }

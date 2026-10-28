@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Иконки встраиваются в бинарник как GResource. Благодаря этому мастер
-  выглядит одинаково и после установки из пакета, и при запуске напрямую
-  из target/release, когда тема hicolor ещё не содержит наших иконок.
+  Icons are embedded into the binary as a GResource. That way the wizard looks
+  the same after installing the package and when running straight from
+  target/release, while the hicolor theme does not contain our icons yet.
 -->
 <gresources>
   <gresource prefix="/org/openarch/swift/icons">
