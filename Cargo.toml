@@ -16,7 +16,7 @@ categories = ["gui"]
 # используется короткий алиас gtk — так принято в примерах gtk-rs.
 gtk = { package = "gtk4", version = "0.9", features = ["v4_10"] }
 # Чтение .pkg.tar.zst и резервных форматов архивов пакетов.
-zstd = "0.13"
+zstd = "0.14"
 xz2 = "0.1"
 flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
 tar = "0.4"
