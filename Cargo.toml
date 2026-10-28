@@ -25,7 +25,7 @@ toml = "0.8"
 
 [build-dependencies]
 # Компиляция assets/resources.gresource.xml в встроенный GResource.
-glib-build-tools = "0.20"
+glib-build-tools = "0.22"
 
 [profile.release]
 lto = "thin"
