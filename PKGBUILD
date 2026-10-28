@@ -31,10 +31,10 @@ makedepends=('cargo' 'rust' 'xz' 'pkgconf')
 options=('!lto')
 optdepends=('xdg-utils: ручная настройка ассоциации файлов')
 install="${pkgname}.install"
-# ВАЖНО: при публикации релиза замените тег/URL и вычислите контрольную сумму:
-#   updpkgsums
+# Контрольная сумма соответствует архиву тега v1.0.0 на GitHub.
+# При выпуске новой версии обновите pkgver/тег и выполните `updpkgsums`.
 source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz")
-sha256sums=('SKIP')
+sha256sums=('4475faf93b573c270e8ff5f3a0c9ca4a700d200ff96d89ca2c827f5053e6fbb5')
 
 build() {
   cd "ArchSwift-${pkgver}"
