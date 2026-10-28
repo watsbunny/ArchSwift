@@ -10,8 +10,11 @@ updates:
     commit-message:
       prefix: "deps"
     groups:
-      cargo:
+      # Patch releases are grouped; minor and major bumps (which may break the
+      # gtk-rs 0.x API) arrive as separate pull requests for review.
+      cargo-patch:
         patterns: ["*"]
+        update-types: ["patch"]
 
   - package-ecosystem: github-actions
     directory: "/"
