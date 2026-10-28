@@ -1,0 +1,107 @@
+name: CI
+
+# Build and test in an Arch Linux environment — the same one the PKGBUILD
+# installs into. This catches differences that are invisible on Ubuntu
+# (GTK4 versions, system liblzma, linking against the bundled zstd).
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Minimal permissions: the workflow only reads the repository.
+permissions:
+  contents: read
+
+# A new push to the same branch cancels the previous run.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+  RUST_BACKTRACE: "1"
+
+jobs:
+  fmt:
+    name: rustfmt
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Check formatting
+        run: cargo fmt --all --check
+
+  clippy:
+    name: clippy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: archlinux:base-devel
+    steps:
+      # actions/checkout itself needs git, so it is installed before checkout.
+      - name: Install build dependencies
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm --needed git gtk4 pkgconf xz
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run clippy
+        run: cargo clippy --locked --all-targets -- -D warnings
+
+  test:
+    name: cargo test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: archlinux:base-devel
+    steps:
+      - name: Install build dependencies
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm --needed git gtk4 pkgconf xz
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+
+      # Same profile as check() in the PKGBUILD: release build with thin LTO.
+      - name: Run tests
+        run: cargo test --locked --release
+
+      - name: Build release binary
+        run: cargo build --locked --release
+
+      - name: Show binary size
+        run: ls -lh target/release/arch-swift
+
+      - name: Upload release binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: arch-swift-linux-x86_64
+          path: target/release/arch-swift
+          if-no-files-found: error
+          retention-days: 14

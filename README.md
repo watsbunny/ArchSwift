@@ -1,5 +1,7 @@
 # ArchSwift
 
+[![CI](https://github.com/watsbunny/ArchSwift/actions/workflows/ci.yml/badge.svg)](https://github.com/watsbunny/ArchSwift/actions/workflows/ci.yml)
+
 **English** | [Русский](README.ru.md)
 
 **ArchSwift** is an open-source graphical wizard for installing local Arch Linux

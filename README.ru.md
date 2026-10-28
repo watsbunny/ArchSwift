@@ -1,5 +1,7 @@
 # ArchSwift
 
+[![CI](https://github.com/watsbunny/ArchSwift/actions/workflows/ci.yml/badge.svg)](https://github.com/watsbunny/ArchSwift/actions/workflows/ci.yml)
+
 [English](README.md) | **Русский**
 
 **ArchSwift** — открытый графический мастер установки локальных пакетов
