@@ -21,7 +21,7 @@ xz2 = "0.1"
 flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
 tar = "0.4"
 # Каталоги переводов localization/lang/*.toml.
-toml = "0.8"
+toml = "1.1"
 
 [build-dependencies]
 # Компиляция assets/resources.gresource.xml в встроенный GResource.
