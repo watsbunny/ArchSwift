@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Иконки встраиваются в бинарник как GResource. Благодаря этому мастер
+  выглядит одинаково и после установки из пакета, и при запуске напрямую
+  из target/release, когда тема hicolor ещё не содержит наших иконок.
+-->
+<gresources>
+  <gresource prefix="/org/openarch/swift/icons">
+    <file alias="scalable/apps/arch-swift-installer.svg">icons/arch-swift-installer.svg</file>
+    <file alias="scalable/apps/arch-swift-package-icon.svg">icons/arch-swift-package-icon.svg</file>
+  </gresource>
+</gresources>

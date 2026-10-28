@@ -1,0 +1,24 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=ArchSwift
+Name[ru]=ArchSwift
+Name[be]=ArchSwift
+GenericName=Arch Package Installer
+GenericName[ru]=Установщик пакетов Arch Linux
+GenericName[be]=Усталёўшчык пакетаў Arch Linux
+Comment=Install local Arch Linux packages with a step-by-step wizard
+Comment[ru]=Установка локальных пакетов Arch Linux с помощью пошагового мастера
+Comment[be]=Усталяванне лакальных пакетаў Arch Linux з дапамогай паступовага майстра
+Exec=arch-swift %f
+TryExec=arch-swift
+Icon=arch-swift-installer
+Terminal=false
+Categories=System;PackageManager;
+MimeType=application/x-arch-swift-package;
+StartupNotify=true
+StartupWMClass=org.openarch.swift
+Keywords=Arch;Linux;Package;Installer;Pacman;PKG;ZST;
+Keywords[ru]=Арч;Линукс;Пакет;Установщик;Мастер;Пакман;ПКГ;
+Keywords[be]=Арч;Лінукс;Пакет;Усталёўшчык;Майстар;Пакман;ПКГ;

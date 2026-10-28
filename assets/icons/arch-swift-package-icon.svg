@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="Arch Linux package">
+  <defs>
+    <linearGradient id="bg" x1="26" y1="18" x2="230" y2="238" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#25A7E8"/>
+      <stop offset="0.55" stop-color="#1287C8"/>
+      <stop offset="1" stop-color="#0B537F"/>
+    </linearGradient>
+    <linearGradient id="front" x1="58" y1="142" x2="126" y2="222" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#DDF2FF"/>
+    </linearGradient>
+    <linearGradient id="side" x1="196" y1="144" x2="136" y2="220" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#BFE7FB"/>
+      <stop offset="1" stop-color="#8BC8EA"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Фон типа файла -->
+  <rect x="10" y="10" width="236" height="236" rx="54" fill="url(#bg)"/>
+  <circle cx="204" cy="52" r="44" fill="#FFFFFF" opacity="0.08"/>
+  <circle cx="44" cy="212" r="54" fill="#FFFFFF" opacity="0.05"/>
+
+  <!-- Коробка пакета -->
+  <path d="M58 138l70-33 70 33-70 33z" fill="#F7FCFF"/>
+  <path d="M58 138l70 33v50l-70-33z" fill="url(#front)"/>
+  <path d="M198 138l-70 33v50l70-33z" fill="url(#side)"/>
+  <path d="M128 171v50" stroke="#7FB6D8" stroke-width="2.5" opacity="0.85"/>
+
+  <!-- Лента -->
+  <path d="M118 165l20 10v46l-20-10z" fill="#FFC857" opacity="0.95"/>
+
+  <!-- Печать с буквой A -->
+  <circle cx="88" cy="186" r="24" fill="#0B537F"/>
+  <circle cx="88" cy="186" r="20" fill="#FFFFFF"/>
+  <path d="M80 195l8-18 8 18M83.5 188h9" fill="none" stroke="#0B537F" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Магическая звезда: пакет готов к установке -->
+  <path d="M196 76l4.4 11.6L212 92l-11.6 4.4L196 108l-4.4-11.6L180 92l11.6-4.4z" fill="#FFE08A"/>
+  <circle cx="214" cy="116" r="4" fill="#FFFFFF" opacity="0.9"/>
+  <circle cx="182" cy="58" r="3" fill="#FFFFFF" opacity="0.7"/>
+
+  <!-- Блик -->
+  <path d="M70 148l44 21" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+</svg>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="ArchSwift installer">
+  <defs>
+    <linearGradient id="bg" x1="32" y1="20" x2="224" y2="236" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7C5CFF"/>
+      <stop offset="0.55" stop-color="#4A6CF7"/>
+      <stop offset="1" stop-color="#1E8AE5"/>
+    </linearGradient>
+    <linearGradient id="boxFront" x1="64" y1="152" x2="132" y2="228" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#DCE8FF"/>
+    </linearGradient>
+    <linearGradient id="boxSide" x1="192" y1="152" x2="136" y2="226" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#BAD0FA"/>
+      <stop offset="1" stop-color="#8EAEE8"/>
+    </linearGradient>
+    <linearGradient id="hat" x1="128" y1="36" x2="128" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2E1D68"/>
+      <stop offset="1" stop-color="#17103B"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Фон приложения -->
+  <rect x="10" y="10" width="236" height="236" rx="54" fill="url(#bg)"/>
+  <circle cx="204" cy="54" r="42" fill="#FFFFFF" opacity="0.07"/>
+  <circle cx="44" cy="210" r="56" fill="#FFFFFF" opacity="0.05"/>
+
+  <!-- Магические искры -->
+  <g fill="#FFE08A">
+    <path d="M44 92l3.2 8.8L56 104l-8.8 3.2L44 116l-3.2-8.8L32 104l8.8-3.2z" opacity="0.95"/>
+    <path d="M210 108l2.6 7.4L220 118l-7.4 2.6L210 128l-2.6-7.4L200 118l7.4-2.6z" opacity="0.8"/>
+    <circle cx="198" cy="74" r="3.5"/>
+    <circle cx="58" cy="128" r="3"/>
+  </g>
+
+  <!-- Шляпа волшебника -->
+  <path d="M128 32c-8 30-28 62-50 84 22 8 78 8 100 0-22-22-42-54-50-84z" fill="url(#hat)"/>
+  <ellipse cx="128" cy="116" rx="56" ry="11" fill="#120C2E"/>
+  <path d="M104 96c15 6 33 6 48 0l-4-13c-13 5-27 5-40 0z" fill="#FFC857"/>
+  <path d="M137 60l2.1 5.7 5.9 2.1-5.9 2.1-2.1 5.7-2.1-5.7-5.9-2.1 5.9-2.1z" fill="#FFE29A"/>
+  <circle cx="113" cy="78" r="2.6" fill="#FFE29A" opacity="0.9"/>
+
+  <!-- Коробка пакета -->
+  <path d="M60 148l68-32 68 32-68 32z" fill="#F8FBFF"/>
+  <path d="M60 148l68 32v48l-68-32z" fill="url(#boxFront)"/>
+  <path d="M196 148l-68 32v48l68-32z" fill="url(#boxSide)"/>
+  <path d="M128 180v48" stroke="#89A7E4" stroke-width="2.5" opacity="0.8"/>
+
+  <!-- Лента и печать на коробке -->
+  <path d="M118 174l20 9v43l-20-9z" fill="#FFC857"/>
+  <circle cx="86" cy="194" r="15" fill="#4A6CF7"/>
+  <path d="M86 184l2.8 7.2L96 194l-7.2 2.8L86 204l-2.8-7.2L76 194l7.2-2.8z" fill="#FFFFFF"/>
+
+  <!-- Блик -->
+  <path d="M72 158l44 21" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+</svg>

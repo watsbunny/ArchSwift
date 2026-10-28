@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Регистрация пакетов Arch Linux как отдельного типа файлов.
+  Установка: /usr/share/mime/packages/arch-swift.xml
+  После установки необходимо выполнить update-mime-database.
+-->
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-arch-swift-package">
+    <comment>Arch Linux package</comment>
+    <comment xml:lang="de">Arch-Linux-Paket</comment>
+    <comment xml:lang="ru">Пакет Arch Linux</comment>
+
+    <!-- Иконка из темы hicolor: assets/icons/arch-swift-package-icon.svg -->
+    <icon name="arch-swift-package-icon"/>
+    <generic-icon name="arch-swift-package-icon"/>
+
+    <!--
+      Точные glob-шаблоны с высоким весом должны выигрывать у общего
+      application/x-compressed-tar, чтобы файл не открывался архиватором.
+    -->
+    <glob pattern="*.pkg.tar.zst" weight="90"/>
+    <glob pattern="*.pkg.tar.xz" weight="90"/>
+    <glob pattern="*.pkg.tar.gz" weight="90"/>
+    <glob pattern="*.pkg.tar" weight="90"/>
+
+    <!-- Сохраняем совместимость с архиваторами и файловыми менеджерами. -->
+    <sub-class-of type="application/x-compressed-tar"/>
+    <alias type="application/x-arch-package"/>
+  </mime-type>
+</mime-info>

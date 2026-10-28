@@ -1,0 +1,33 @@
+[package]
+name = "arch-swift"
+version = "1.0.0"
+edition = "2021"
+rust-version = "1.80"
+description = "ArchSwift — графический мастер установки локальных пакетов Arch Linux"
+license = "MIT"
+repository = "https://github.com/watsbunny/ArchSwift"
+homepage = "https://github.com/watsbunny/ArchSwift"
+readme = "README.md"
+keywords = ["archlinux", "package", "installer", "gtk4", "pacman"]
+categories = ["gui"]
+
+[dependencies]
+# GTK4 отвечает за интерфейс мастера. Пакет называется gtk4, но в коде
+# используется короткий алиас gtk — так принято в примерах gtk-rs.
+gtk = { package = "gtk4", version = "0.9", features = ["v4_10"] }
+# Чтение .pkg.tar.zst и резервных форматов архивов пакетов.
+zstd = "0.13"
+xz2 = "0.1"
+flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
+tar = "0.4"
+# Каталоги переводов localization/lang/*.toml.
+toml = "0.8"
+
+[build-dependencies]
+# Компиляция assets/resources.gresource.xml в встроенный GResource.
+glib-build-tools = "0.20"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

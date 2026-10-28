@@ -1,0 +1,7 @@
+/target/
+/pkg/
+/src/pkg/
+/src/target/
+/src/cargo-home/
+*.pkg.tar.zst
+*.pkg.tar.zst.sig
